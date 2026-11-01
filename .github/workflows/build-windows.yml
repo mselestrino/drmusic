@@ -25,6 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Build executable
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name DrMusic --collect-all yt_dlp app/main.py
+
       - name: Download FFmpeg for Windows
         shell: pwsh
         run: |
@@ -36,10 +40,6 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item $ffmpeg.FullName dist/ffmpeg.exe
           Copy-Item $ffprobe.FullName dist/ffprobe.exe
-
-      - name: Build executable
-        run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name DrMusic --collect-all yt_dlp app/main.py
 
       - name: Package app and FFmpeg
         shell: pwsh
