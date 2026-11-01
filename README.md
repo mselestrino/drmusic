@@ -16,7 +16,8 @@ O instalador baixa a versão publicada em Releases e abre o aplicativo. Não é 
 
 ## Desenvolvimento
 
-- Interface: Python / Tkinter
+- Interface: Python / Tkinter com prévia de miniaturas
+- Imagens: Pillow
 - Downloads: yt-dlp
 - Conversão de áudio: FFmpeg
 - Distribuição Windows: PyInstaller + GitHub Releases
