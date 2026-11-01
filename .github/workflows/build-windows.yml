@@ -20,25 +20,38 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Download FFmpeg for Windows
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile ffmpeg.zip
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg-extract -Force
+          $ffmpeg = Get-ChildItem -Path ffmpeg-extract -Filter ffmpeg.exe -Recurse | Select-Object -First 1
+          $ffprobe = Get-ChildItem -Path ffmpeg-extract -Filter ffprobe.exe -Recurse | Select-Object -First 1
+          if (-not $ffmpeg -or -not $ffprobe) { throw "Não foi possível localizar ffmpeg.exe e ffprobe.exe no pacote." }
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item $ffmpeg.FullName dist/ffmpeg.exe
+          Copy-Item $ffprobe.FullName dist/ffprobe.exe
+
       - name: Build executable
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name DrMusic --collect-all yt_dlp --collect-all imageio_ffmpeg app/main.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name DrMusic --collect-all yt_dlp app/main.py
 
-      - name: Package
+      - name: Package app and FFmpeg
+        shell: pwsh
         run: |
-          Compress-Archive -Path dist/DrMusic.exe -DestinationPath DrMusic-windows.zip -Force
+          Compress-Archive -Path dist/DrMusic.exe,dist/ffmpeg.exe,dist/ffprobe.exe -DestinationPath DrMusic-windows.zip -Force
 
       - name: Publish latest release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: DrMusic - Latest
-          body: "Build automático da versão mais recente do DrMusic para Windows."
+          body: "DrMusic para Windows com FFmpeg e FFprobe incluídos no pacote."
           files: DrMusic-windows.zip
           make_latest: true
           fail_on_unmatched_files: true
