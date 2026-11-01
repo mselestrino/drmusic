@@ -346,7 +346,7 @@ class DrMusicApp:
         except Exception as exc:
             messagebox.showerror(APP_NAME, f"Não foi possível usar a pasta: {exc}")
             return
-        indices = [int(x) + 1 for x in selected]
+        indices = [self.entries[int(x)].get("_drmusic_playlist_index", int(x) + 1) for x in selected]
         self._set_busy(True)
         self.progress.configure(value=0)
         self.status.set(f"Preparando {len(indices)} item(ns)…")
@@ -399,6 +399,8 @@ class DrMusicApp:
                 kind = event[0]
                 if kind == "loaded":
                     self.entries, self.is_playlist = event[1], event[2]
+                    for original_index, entry in enumerate(self.entries, start=1):
+                        entry["_drmusic_playlist_index"] = original_index
                     self._show_entries()
                     self.status.set(f"{event[3]} carregado.")
                     self._set_busy(False)
