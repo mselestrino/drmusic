@@ -75,9 +75,14 @@ class DrMusicApp:
                         darkcolor=ACCENT)
 
     def _label(self, parent, text, color=MUTED, size=9, bold=False, **kwargs):
-        return tk.Label(parent, text=text, bg=kwargs.pop("bg", PANEL), fg=color,
-                        font=("Segoe UI", size, "bold" if bold else "normal"),
-                        **kwargs)
+        options = {"bg": kwargs.pop("bg", PANEL), "fg": color,
+                   "font": ("Segoe UI", size, "bold" if bold else "normal")}
+        if isinstance(text, tk.Variable):
+            options["textvariable"] = text
+        else:
+            options["text"] = text
+        options.update(kwargs)
+        return tk.Label(parent, **options)
 
     def _button(self, parent, text, command, primary=False, **kwargs):
         bg = ACCENT if primary else PANEL_2
