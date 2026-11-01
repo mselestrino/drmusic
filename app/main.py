@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import os
 import queue
+import shutil
+import sys
 import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-import imageio_ffmpeg
 import yt_dlp
 
 
@@ -228,7 +229,17 @@ class DrMusicApp:
     def _download_worker(self, url: str, indices: list[int], folder: str,
                          is_playlist: bool, output_format: str, quality: str) -> None:
         try:
-            ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+            if getattr(sys, "frozen", False):
+                ffmpeg_dir = Path(sys.executable).resolve().parent
+                ffmpeg_exe = ffmpeg_dir / "ffmpeg.exe"
+                ffprobe_exe = ffmpeg_dir / "ffprobe.exe"
+                if not ffmpeg_exe.is_file() or not ffprobe_exe.is_file():
+                    raise RuntimeError("Os arquivos do FFmpeg não foram encontrados junto ao DrMusic. Reinstale o aplicativo.")
+            else:
+                ffmpeg_path = shutil.which("ffmpeg")
+                if not ffmpeg_path:
+                    raise RuntimeError("FFmpeg não encontrado. Instale o FFmpeg para executar a versão de desenvolvimento.")
+                ffmpeg_dir = Path(ffmpeg_path).resolve().parent
             def progress_hook(data):
                 if data.get("status") == "downloading":
                     total = data.get("total_bytes") or data.get("total_bytes_estimate") or 0
@@ -246,7 +257,7 @@ class DrMusicApp:
                 "nooverwrites": True,
                 "progress_hooks": [progress_hook],
                 "quiet": True,
-                "ffmpeg_location": str(Path(ffmpeg).parent),
+                "ffmpeg_location": str(ffmpeg_dir),
             }
             if is_playlist:
                 opts["playlist_items"] = ",".join(str(i) for i in indices)
